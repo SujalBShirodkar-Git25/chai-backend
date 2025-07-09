@@ -92,7 +92,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
-  const loggedInUser = User.findById(user._id).select("-password -refreshToken");
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
   const options = {
     httpOnly: true,
@@ -113,7 +113,7 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 });
 
-export const logOutUser = asyncHandler(async (req, res) => {
+const logOutUser = asyncHandler(async (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     {
@@ -137,4 +137,4 @@ export const logOutUser = asyncHandler(async (req, res) => {
   .json(new ApiResponse(200, {}, "User logged out"));
 });
 
-export {registerUser, loginUser};
+export {registerUser, loginUser, logOutUser};``
