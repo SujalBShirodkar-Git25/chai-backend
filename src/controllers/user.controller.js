@@ -168,11 +168,11 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
     .json(
       new ApiResponse(
         200,
-      {
-        accessToken, 
-        refreshToken: newRefreshToken 
-      },
-      "Access token refreshed"
+        {
+          accessToken, 
+          refreshToken: newRefreshToken 
+        },
+        "Access token refreshed"
       )
     );
   } catch (error) {
