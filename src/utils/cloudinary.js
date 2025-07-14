@@ -23,10 +23,17 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-/*const removeFromCloudinary = async (url) => {
+const removeFromCloudinary = async (url) => {
   if(!url) return null;
 
-  const publicId = 
-}*/
+  const lastSlashIndex = url.lastIndexOf("/");
+  const lastDotIndex = url.lastIndexOf(".");
 
-export {uploadOnCloudinary};
+  const publicId = url.substring(lastSlashIndex+1,lastDotIndex);
+
+  const response = await cloudinary.uploader.destroy(publicId);
+
+  return response;
+}
+
+export {uploadOnCloudinary, removeFromCloudinary};

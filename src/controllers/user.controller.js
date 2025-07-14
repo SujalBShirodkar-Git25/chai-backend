@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {User} from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { removeFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -119,8 +119,8 @@ const logOutUser = asyncHandler(async (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined
+      $unset: {
+        refreshToken: 1
       }
     },
     {
@@ -244,6 +244,8 @@ const updateUserAvatar = asyncHandler(async (req,res) => {
 
   if(!avatar) throw new ApiError(400, "Error while uploading on avatar");
 
+  const url = req.user?.avatar;
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -255,6 +257,9 @@ const updateUserAvatar = asyncHandler(async (req,res) => {
   ).select("-password -refreshToken");
 
   //delete the old avatar in cloudinary
+  const deleteResponse = await removeFromCloudinary(url);
+
+  if(deleteResponse.result !== "ok") throw new ApiError(400, `Error while deleting old avatar from cloudinary : ${deleteResponse.result}`);
 
   return res.status(200).json(
     new ApiResponse(
@@ -274,6 +279,8 @@ const updateUserCoverImage = asyncHandler(async (req,res) => {
 
   if(!coverImage) throw new ApiError(400, "Error while uploading on cover image");
 
+  const url = req.user?.coverImage;
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -285,6 +292,9 @@ const updateUserCoverImage = asyncHandler(async (req,res) => {
   ).select("-password -refreshToken");
 
   //Delete the old cover image in cloudinary
+  const deleteResponse = await removeFromCloudinary(url);
+
+  if(deleteResponse.result !== "ok") throw new ApiError(400, `Error while deleting old coverImage from cloudinary : ${deleteResponse.result}`);
 
   return res.status(200).json(
     new ApiResponse(
@@ -331,7 +341,7 @@ const getUserChannelProfile = asyncHandler(async (req,res) => {
           $size: "$subscribedTo"
         },
         isSubscribed: {
-          $con: {
+          $cond: {
             if: {$in: [req.user?._id, "$subscribers.subscriber"]},
             then: true,
             else: false
